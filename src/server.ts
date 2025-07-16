@@ -53,3 +53,14 @@ app.use(limiter);
   }
 })();
 
+const handleShutdown = async () => {
+  try {
+    console.log('Shutting down gracefully...');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during shutdown:', error);
+  }
+}
+
+process.on('SIGTERM', handleShutdown);
+process.on('SIGINT', handleShutdown);
