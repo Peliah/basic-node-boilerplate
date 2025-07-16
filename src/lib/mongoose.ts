@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import config from "@/config";
 import { ConnectOptions } from "mongoose";
+import { logger } from "./winston";
 
 
 const clientOptions: ConnectOptions = {
@@ -21,7 +22,7 @@ export const connectToDatabase = async (): Promise<void> => {
 
     try {
         await mongoose.connect(config.MONGO_URI, clientOptions);
-        console.log("Connected to MongoDB successfully", {
+        logger.info("Connected to MongoDB successfully", {
             url: config.MONGO_URI,
             options: clientOptions,
         });
@@ -29,7 +30,7 @@ export const connectToDatabase = async (): Promise<void> => {
         if (error instanceof Error) {
             throw new Error(`Failed to connect to MongoDB: ${error.message}`);
         }
-        console.error("Error connecting to MongoDB:", error);
+        logger.error("Error connecting to MongoDB:", error);
         if (config.NODE_ENV === 'production') {
             process.exit(1);
         }
@@ -39,7 +40,7 @@ export const connectToDatabase = async (): Promise<void> => {
 export const disconnectFromDatabase = async (): Promise<void> => {
     try {
         await mongoose.disconnect();
-        console.log("Disconnected from MongoDB successfully", {
+        logger.info("Disconnected from MongoDB successfully", {
             url: config.MONGO_URI,
             options: clientOptions,
         });
@@ -47,6 +48,6 @@ export const disconnectFromDatabase = async (): Promise<void> => {
         if (error instanceof Error) {
             throw new Error(`Failed to disconnect from MongoDB: ${error.message}`);
         }
-        console.error("Error disconnecting from MongoDB:", error);
+        logger.error("Error disconnecting from MongoDB:", error);
     }
 }

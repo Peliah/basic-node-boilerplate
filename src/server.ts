@@ -6,6 +6,8 @@ import compression from 'compression';
 import helmet from 'helmet';
 import limiter from '@/lib/express_rate_limit';
 import v1routes from '@/routes/v1/index';
+import { connectToDatabase, disconnectFromDatabase } from './lib/mongoose';
+import { logger } from '@/lib/winston';
 
 const app = express();
 
@@ -16,7 +18,7 @@ const corsOptions: CorsOptions = {
       callback(null, true);
     } else {
       callback(new Error(`Cors Error: Origin ${origin} not allowed by CORS`), false);
-      console.log(`Cors Error: Origin ${origin} not allowed by CORS`);
+      logger.error(`Cors Error: Origin ${origin} not allowed by CORS`);
 
     }
   },
@@ -39,14 +41,14 @@ app.use(limiter);
 
 (async () => {
   try {
-
+    await connectToDatabase();
     app.use('/api/v1', v1routes);
 
     app.listen(config.PORT, () => {
-      console.log(`Server running on http://localhost:${config.PORT}`);
+      logger.info(`Server running on http://localhost:${config.PORT}`);
     });
   } catch (error) {
-    console.error('Error during application initialization:', error);
+    logger.error('Error during application initialization:', error);
     if (config.NODE_ENV === 'produciton') {
       process.exit(1);
     }
@@ -55,10 +57,11 @@ app.use(limiter);
 
 const handleShutdown = async () => {
   try {
-    console.log('Shutting down gracefully...');
+    await disconnectFromDatabase();
+    logger.warn('Shutting down gracefully...');
     process.exit(0);
   } catch (error) {
-    console.error('Error during shutdown:', error);
+    logger.error('Error during shutdown:', error);
   }
 }
 
