@@ -15,7 +15,7 @@ if (config.NODE_ENV !== 'produciton') {
                 align(),
                 printf(({ level, message, timestamp, ...meta }) => {
                     const metaString = Object.keys(meta).length ? JSON.stringify(meta) : '';
-                    return `${timestamp} [${level.toUpperCase()}]: ${message}${metaString}`;
+                    return `${timestamp} [${level}]: ${message}${metaString}`;
                 })
             )
         }),
