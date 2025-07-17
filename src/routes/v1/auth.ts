@@ -4,6 +4,8 @@ import User from "@/models/user";
 import register from "@/controllers/v1/auth/register";
 import refreshToken from "@/controllers/v1/auth/refresh_token";
 import login from "@/controllers/v1/auth/login";
+import logout from "@/controllers/v1/auth/logout";
+import authenticate from "@/middleware/authenticate";
 import bcrypt from 'bcrypt'
 import validationError from "@/middleware/validationError";
 
@@ -61,6 +63,8 @@ router.post(
 
 router.post(
     '/logout',
+    authenticate,
+    logout
 )
 
 export default router;
