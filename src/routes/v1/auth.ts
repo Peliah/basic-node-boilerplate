@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { body } from "express-validator";
+import { body, cookie } from "express-validator";
 import User from "@/models/user";
 import register from "@/controllers/v1/auth/register";
+import refreshToken from "@/controllers/v1/auth/refresh_token";
 import login from "@/controllers/v1/auth/login";
 import bcrypt from 'bcrypt'
 import validationError from "@/middleware/validationError";
@@ -24,7 +25,7 @@ router.post(
     register
 );
 
-// Route to login a user (not implemented yet)
+// Route to login a user
 router.post(
     '/login',
     body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Invalid email format').custom(async (value) => {
@@ -47,6 +48,19 @@ router.post(
     login
 );
 
+// Refresh token route (test completion)
+router.post(
+    '/refresh-token',
+    cookie('refreshToken')
+        .exists().withMessage('Refresh token is required')
+        .notEmpty().withMessage('Refresh token is required')
+        .isJWT().withMessage('Invalid refresh token'),
+    validationError,
+    refreshToken
+);
 
+router.post(
+    '/logout',
+)
 
 export default router;
