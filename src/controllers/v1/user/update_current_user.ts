@@ -11,18 +11,26 @@ import type { Request, Response } from "express";
  * @returns {void}
  */
 const updateCurrentUser = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.userId;
+    const {
+        username,
+        email,
+        password,
+        role,
+        firstName,
+        lastName,
+        twitter,
+        facebook,
+        linkedin,
+        instagram,
+        youtube,
+        github,
+        website,
+        profilePicture,
+        bio,
+    } = req.body;
     try {
-        const userId = req.userId;
-        if (!userId) {
-            res.status(401).json({
-                code: "AuthenticationError",
-                message: "Access denied, no user ID found"
-            });
-            return;
-        }
-
-        const updateData = req.body;
-        const user = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true }).select('-__v').lean().exec();
+        const user = await User.findById(userId).select('+password -__v').exec();
         if (!user) {
             res.status(404).json({
                 code: "UserNotFound",
@@ -30,6 +38,25 @@ const updateCurrentUser = async (req: Request, res: Response): Promise<void> => 
             });
             return;
         }
+        if (username) user.username = username;
+        if (email) user.email = email;
+        if (password) user.password = password;
+        if (role) user.role = role;
+        if (firstName) user.firstName = firstName;
+        if (lastName) user.lastName = lastName;
+        if (!user.socialLinks) {
+            user.socialLinks = {};
+        }
+        if (twitter) user.socialLinks.twitter = twitter;
+        if (facebook) user.socialLinks.facebook = facebook;
+        if (linkedin) user.socialLinks.linkedin = linkedin;
+        if (instagram) user.socialLinks.instagram = instagram;
+        if (youtube) user.socialLinks.youtube = youtube;
+        if (github) user.socialLinks.github = github;
+        if (website) user.socialLinks.website = website;
+        if (profilePicture) user.profilePicture = profilePicture;
+        if (bio) user.bio = bio;
+        await user.save();
 
         res.status(200).json({ user });
         logger.info('Current user details updated successfully', { userId });
