@@ -10,18 +10,20 @@ import updateCurrentUser from "@/controllers/v1/user/update_current_user";
 import deleteCurrentUser from "@/controllers/v1/user/delete_current_user";
 import getAllUsers from "@/controllers/v1/user/get_all_users";
 import getUser from "@/controllers/v1/user/get_user_by_id";
+import updateUser from "@/controllers/v1/user/update_user_by_id";
+import deleteUser from "@/controllers/v1/user/delete_user_by_id";
 
 const router = Router();
 
 // Route to get the current authenticated user's details
-router.get('/current',
+router.get('/me',
     authenticate,
     authorize(['user', 'admin']),
     getCurrentUser
 );
 
 // route to update the current user's details
-router.put('/current',
+router.put('/me',
     authenticate,
     authorize(['user', 'admin']),
     body('username').optional().isString().isLength({ max: 20 }).withMessage('Username must be a string and less than 20 characters').custom(async (value) => {
@@ -43,7 +45,7 @@ router.put('/current',
     updateCurrentUser,
 );
 
-router.delete('/current',
+router.delete('/me',
     authenticate,
     authorize(['user', 'admin']),
     deleteCurrentUser
@@ -60,12 +62,46 @@ router.get('/',
 );
 
 // get user by id
-router.get('/:userId',
+router.get('/:id',
     authenticate,
     authorize(['admin']),
-    param('userId').notEmpty().isMongoId().withMessage('Invalid user ID format'),
+    param('id').notEmpty().isMongoId().withMessage('Invalid user ID format'),
     validationError,
     getUser,
+);
+
+// route to update user by id
+router.put('/:id',
+    authenticate,
+    authorize(['admin']),
+    param('id').notEmpty().isMongoId().withMessage('Invalid user ID format'),
+    body('username').optional().isString().isLength({ max: 20 }).withMessage('Username must be a string and less than 20 characters').custom(async (value, { req }) => {
+        const userExists = await User.findOne({ username: value, _id: { $ne: req.params!.id } });
+        if (userExists) {
+            throw new Error('Username is already in use');
+        }
+    }),
+    body('email').optional().isEmail().withMessage('Email must be a valid email address').custom(async (value, { req }) => {
+        const userExists = await User.findOne({ email: value, _id: { $ne: req.params!.id } });
+        if (userExists) {
+            throw new Error('Email already exists');
+        }
+    }),
+    body('password').optional().isString().isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+    body('role').optional().isIn(['user', 'admin']).withMessage('Role must be either user or admin'),
+    body(['first_name', 'last_name']).optional().isString().withMessage('Name must be  less than 50 characters').isLength({ max: 50 }),
+    body(['twitter', 'facebook', 'linkedin', 'instagram', 'youtube', 'github', 'website']).optional().isURL().withMessage('Social links must be valid URLs'),
+    validationError,
+    updateUser,
+);
+
+// route to delete user by id
+router.delete('/:id',
+    authenticate,
+    authorize(['admin']),
+    param('id').notEmpty().isMongoId().withMessage('Invalid user ID format'),
+    validationError,
+    deleteUser,
 );
 
 export default router;
