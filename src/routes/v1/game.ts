@@ -8,6 +8,41 @@ import gamePlay from "@/controllers/v1/game/game_play";
 
 const router = Router();
 
+/** 
+ * @openapi
+ * /api/v1/games/play:
+ *   post:
+ *     summary: Play a game
+ *     tags: [Game]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               generatedNumber:
+ *                 type: integer
+ *               newBalance:
+ *                 type: integer
+ *               result:
+ *                 type: string
+ *                 enum: ['win', 'lose']
+ *     responses:
+ *       201:
+ *         description: Game played successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
 router.post('/play',
     authenticate,
     authorize(['admin', 'user']),

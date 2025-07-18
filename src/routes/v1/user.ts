@@ -12,17 +12,107 @@ import getAllUsers from "@/controllers/v1/user/get_all_users";
 import getUser from "@/controllers/v1/user/get_user_by_id";
 import updateUser from "@/controllers/v1/user/update_user_by_id";
 import deleteUser from "@/controllers/v1/user/delete_user_by_id";
-
+import swagger from "@/config/swagger";
 const router = Router();
 
-// Route to get the current authenticated user's details
+/** 
+ * @openapi
+ * /api/v1/users/me:
+ *   get:
+ *     summary: Get current user details
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved current user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string   
+ *                     role:
+ *                       type: string
+ *                     first_name:
+ *                       type: string
+ *                     last_name:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     profile_picture:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     balance:
+ *                       type: number
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: number
+ *                message:
+ *                  type: string
+ */
 router.get('/me',
     authenticate,
     authorize(['user', 'admin']),
     getCurrentUser
 );
 
-// route to update the current user's details
+/** 
+ * @openapi
+ * /api/v1/users/me:
+ *   put:
+ *     summary: Update current user details
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               first_name:
+ *                 type: string
+ *               last_name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully updated current user details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string   
+ *                     role:
+ *                       type: string
+ */
 router.put('/me',
     authenticate,
     authorize(['user', 'admin']),
@@ -40,18 +130,56 @@ router.put('/me',
     }),
     body('password').optional().isString().isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
     body(['first_name', 'last_name']).optional().isString().withMessage('Name must be  less than 50 characters').isLength({ max: 50 }),
-    body(['twitter', 'facebook', 'linkedin', 'instagram', 'youtube', 'github', 'website']).optional().isURL().withMessage('Social links must be valid URLs'),
     validationError,
     updateCurrentUser,
 );
 
+/** 
+ * @openapi
+ * /api/v1/users/me:
+ *   delete:
+ *     summary: Delete current user
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       204:
+ *         description: Successfully deleted current user
+ *       401:
+ *         description: Unauthorized
+ */
 router.delete('/me',
     authenticate,
     authorize(['user', 'admin']),
     deleteCurrentUser
 );
 
-// route to get the all users
+
+/** 
+ * @openapi
+ * /api/v1/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of users to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Offset for pagination
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all users
+ */
 router.get('/',
     authenticate,
     authorize(['admin']),
@@ -61,7 +189,26 @@ router.get('/',
     getAllUsers
 );
 
-// get user by id
+
+/**
+ * @openapi
+ * /api/v1/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string   
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user
+ */
 router.get('/:id',
     authenticate,
     authorize(['admin']),
@@ -70,7 +217,49 @@ router.get('/:id',
     getUser,
 );
 
-// route to update user by id
+
+/**
+ * @openapi
+ * /api/v1/users/{id}:
+ *   put:
+ *     summary: Update user by ID
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string   
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email: 
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               first_name:
+ *                 type: string
+ *               last_name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               profilePicture:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully updated user
+ */
 router.put('/:id',
     authenticate,
     authorize(['admin']),
@@ -95,7 +284,26 @@ router.put('/:id',
     updateUser,
 );
 
-// route to delete user by id
+
+/**
+ * @openapi
+ * /api/v1/users/{id}:
+ *   delete:
+ *     summary: Delete user by ID
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string   
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Successfully deleted user
+ */
 router.delete('/:id',
     authenticate,
     authorize(['admin']),

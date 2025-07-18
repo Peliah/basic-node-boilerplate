@@ -8,6 +8,9 @@ import limiter from '@/lib/express_rate_limit';
 import v1routes from '@/routes/v1/index';
 import { connectToDatabase, disconnectFromDatabase } from './lib/mongoose';
 import { logger } from '@/lib/winston';
+import swagger from './config/swagger';
+import swaggerUI from 'swagger-ui-express';
+
 
 const app = express();
 
@@ -43,6 +46,7 @@ app.use(limiter);
   try {
     await connectToDatabase();
     app.use('/api/v1', v1routes);
+    app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swagger));
 
     app.listen(config.PORT, () => {
       logger.info(`Server running on http://localhost:${config.PORT}`);

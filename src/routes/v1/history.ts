@@ -9,12 +9,58 @@ import getUserHistory from "@/controllers/v1/history/get_user_history";
 
 const router = Router();
 
+/** 
+ * @openapi
+ * /api/v1/history:
+ *   get:
+ *     summary: Get user history
+ *     tags: [History]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user history
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/History'
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/',
     authenticate,
     authorize(['admin', 'user']),
     getUserHistory
 );
 
+/** 
+ * @openapi
+ * /api/v1/history/all:
+ *   get:
+ *     summary: Get all history records (admin only)
+ *     tags: [History]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved all history records
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 history:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/History'
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/all',
     authenticate,
     authorize(['admin']),

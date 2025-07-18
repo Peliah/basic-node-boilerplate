@@ -11,7 +11,29 @@ import validationError from "@/middleware/validationError";
 
 const router = Router();
 
-// Route to register a new user
+/**
+ * @openapi
+ * /api/v1/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully registered user
+ */
 router.post(
     '/register',
     body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Invalid email format').custom(async (value) => {
@@ -27,7 +49,27 @@ router.post(
     register
 );
 
-// Route to login a user
+/**
+ * @openapi
+ * /api/v1/auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Successfully logged in user
+ */
 router.post(
     '/login',
     body('email').trim().notEmpty().withMessage('Email is required').isEmail().withMessage('Invalid email format').custom(async (value) => {
@@ -50,7 +92,18 @@ router.post(
     login
 );
 
-// Refresh token route (test completion)
+/**
+ * @openapi
+ * /api/v1/auth/refresh-token:
+ *   post:
+ *     summary: Refresh user access token
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully refreshed access token
+ */
 router.post(
     '/refresh-token',
     cookie('refreshToken')
@@ -61,6 +114,18 @@ router.post(
     refreshToken
 );
 
+/**
+ * @openapi
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout user
+ *     tags: [Auth]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully logged out user
+ */
 router.post(
     '/logout',
     authenticate,
