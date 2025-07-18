@@ -56,7 +56,7 @@ router.get('/',
     authenticate,
     authorize(['admin']),
     query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be a positive integer'),
-    query('offser').optional().isInt({ min: 0 }).withMessage('Page must be a positive integer'),
+    query('offset').optional().isInt({ min: 0 }).withMessage('Page must be a positive integer'),
     validationError,
     getAllUsers
 );
