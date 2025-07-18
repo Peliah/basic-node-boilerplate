@@ -8,17 +8,10 @@ export interface IUser {
     role: 'user' | 'admin';
     firstName?: string;
     lastName?: string;
-    socialLinks?: {
-        twitter?: string;
-        facebook?: string;
-        linkedin?: string;
-        instagram?: string;
-        youtube?: string;
-        github?: string;
-        website?: string;
-    };
+    phone: string;
     profilePicture?: string;
     bio?: string;
+    balance: number;
 }
 
 const userSchema = new Schema<IUser>({
@@ -50,17 +43,13 @@ const userSchema = new Schema<IUser>({
     },
     firstName: { type: String, default: '' },
     lastName: { type: String, default: '' },
-    socialLinks: {
-        twitter: { type: String, default: '' },
-        facebook: { type: String, default: '' },
-        linkedin: { type: String, default: '' },
-        instagram: { type: String, default: '' },
-        youtube: { type: String, default: '' },
-        github: { type: String, default: '' },
-        website: { type: String, default: '' }
-    },
+    phone: { type: String, required: [true, 'Phone number is required'], unique: true },
     profilePicture: { type: String, default: '' },
-    bio: { type: String, default: '' }
+    bio: { type: String, default: '' },
+    balance: {
+        type: Number,
+        default: 0,
+    },
 }, {
     timestamps: true,
 });

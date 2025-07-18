@@ -5,8 +5,8 @@ import { logger } from "./winston";
 
 
 const clientOptions: ConnectOptions = {
-    dbName: "blog-db",
-    appName: "Blog API",
+    dbName: "true-number-db",
+    appName: "True Number App",
     serverApi: {
         version: "1",
         strict: true,

@@ -20,13 +20,8 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
         role,
         firstName,
         lastName,
-        twitter,
-        facebook,
-        linkedin,
-        instagram,
-        youtube,
-        github,
-        website,
+        phone,
+        balance,
         profilePicture,
         bio,
     } = req.body;
@@ -47,17 +42,8 @@ const updateUser = async (req: Request, res: Response): Promise<void> => {
         if (role) user.role = role;
         if (firstName) user.firstName = firstName;
         if (lastName) user.lastName = lastName;
-        if (!user.socialLinks) {
-            user.socialLinks = {};
-        }
-
-        if (twitter) user.socialLinks.twitter = twitter;
-        if (facebook) user.socialLinks.facebook = facebook;
-        if (linkedin) user.socialLinks.linkedin = linkedin;
-        if (instagram) user.socialLinks.instagram = instagram;
-        if (youtube) user.socialLinks.youtube = youtube;
-        if (github) user.socialLinks.github = github;
-        if (website) user.socialLinks.website = website;
+        if (phone) user.phone = phone;
+        if (balance !== undefined) user.balance = balance; // Allow balance to be updated
 
         if (profilePicture) user.profilePicture = profilePicture;
         if (bio) user.bio = bio;
