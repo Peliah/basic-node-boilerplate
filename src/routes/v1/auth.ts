@@ -30,6 +30,8 @@ const router = Router();
  *                 type: string
  *               role:
  *                 type: string
+ *               phone:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Successfully registered user
@@ -45,6 +47,13 @@ router.post(
     }),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long').notEmpty().withMessage('Password is required'),
     body('role').optional().isIn(['user', 'admin']).isString().withMessage('Role must be either user or admin'),
+    body('phone').isString().withMessage('Phone number must be a string').isLength({ min: 9, max: 9 }).custom(async (value) => {
+        const existingUser = await User.exists({ phone: value });
+        if (existingUser) {
+            throw new Error('Phone number already in use');
+        }
+        return true;
+    }),
     validationError,
     register
 );

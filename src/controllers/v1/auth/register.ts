@@ -7,12 +7,12 @@ import { generateUserName } from "@/utils";
 import { generateAccessToken, generateRefreshToken } from "@/lib/jwt";
 import Token from "@/models/token";
 
-type UserData = Pick<IUser, 'email' | 'password' | 'role'>;
+type UserData = Pick<IUser, 'email' | 'password' | 'role' | 'phone'>;
 
 const register = async (req: Request, res: Response): Promise<void> => {
-    const { email, password, role } = req.body as UserData;
+    const { email, password, phone, role } = req.body as UserData;
 
-    if (role === 'admin' && !config.WHITELIST_ADMINS_EMAIL.includes(email)) {
+    if (role === 'admin' || !config.WHITELIST_ADMINS_EMAIL.includes(email)) {
         res.status(403).json({
             code: "AuthorizationError",
             message: "You are not allowed to register as an admin.",
@@ -27,6 +27,7 @@ const register = async (req: Request, res: Response): Promise<void> => {
             username,
             email,
             password,
+            phone,
             role,
         });
 
@@ -51,14 +52,17 @@ const register = async (req: Request, res: Response): Promise<void> => {
             user: {
                 username: newUser.username,
                 email: newUser.email,
+                phone: newUser.phone,
                 role: newUser.role,
+                userId: newUser._id.toString(),
+
             },
             accessToken,
         });
         logger.info(`User registered successfully`, newUser);
     } catch (error) {
         res.status(500).json({ code: "Server error", message: "Internal server error: " + error });
-        logger.error("Error during registration:", error);
+        logger.error("Error during registration: ", error);
     }
 }
 

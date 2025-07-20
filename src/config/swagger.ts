@@ -8,6 +8,15 @@ const options = {
             version: "1.0.0",
             description: 'API documentation for True Number',
         },
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
     },
     apis: [__dirname + '/../routes/v1/*.ts'],
 };

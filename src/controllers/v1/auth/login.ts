@@ -44,6 +44,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
                 username: user.username,
                 email: user.email,
                 role: user.role,
+                userId: user._id.toString(),
             },
             accessToken,
         });

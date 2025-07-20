@@ -40,7 +40,7 @@ const getUserHistory = async (req: Request, res: Response): Promise<void> => {
         }
 
         res.status(200).json({ history });
-        logger.info('User game history fetched successfully', { history });
+        logger.info('User game history fetched successfully', { total, limit, offset, history });
     } catch (error) {
         res.status(500).json({
             code: "ServerError",

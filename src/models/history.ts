@@ -3,7 +3,6 @@ import { Schema, model, Types } from 'mongoose';
 export interface IHistory {
     userId: Types.ObjectId;
     gameId: Types.ObjectId;
-    guessedNumber: number;
     generatedNumber: number;
     result: 'win' | 'lose';
     newBalance: number;
@@ -21,10 +20,6 @@ const historySchema = new Schema<IHistory>({
         type: Schema.Types.ObjectId,
         required: [true, 'Game ID is required'],
         ref: 'Game',
-    },
-    guessedNumber: {
-        type: Number,
-        required: [true, 'Guessed number is required'],
     },
     generatedNumber: {
         type: Number,

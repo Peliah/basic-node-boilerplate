@@ -26,9 +26,22 @@ const router = Router();
  *               type: object
  *               properties:
  *                 history:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/History'
+ *                   type: object
+ *                   properties:
+ *                     userId:
+ *                       type: string
+ *                     gameId:
+ *                       type: string
+ *                     generatedNumber:
+ *                       type: number
+ *                     result:
+ *                       type: string
+ *                     newBalance:
+ *                       type: number
+ *                     balanceChange:
+ *                       type: number
+ *                     date:
+ *                       type: string
  *       401:
  *         description: Unauthorized
  */
@@ -46,18 +59,22 @@ router.get('/',
  *     tags: [History]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of history records to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Offset for pagination
  *     responses:
  *       200:
  *         description: Successfully retrieved all history records
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 history:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/History'
  *       401:
  *         description: Unauthorized
  */

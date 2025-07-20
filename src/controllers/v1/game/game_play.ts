@@ -3,6 +3,9 @@ import { logger } from "@/lib/winston";
 import Game from "@/models/game";
 import type { IGame } from "@/models/game";
 import User from "@/models/user";
+import createHistory from "../history/create_history";
+import type { IHistory } from "@/models/history";
+
 type GameData = Pick<IGame, 'generatedNumber' | 'newBalance' | 'result'>;
 /**
  * @function gamePlay
@@ -25,6 +28,29 @@ const gamePlay = async (req: Request, res: Response): Promise<void> => {
             result
         });
 
+        if (newGame && userId) {
+            const history: IHistory = {
+                userId,
+                gameId: newGame._id,
+                generatedNumber,
+                result,
+                newBalance,
+                balanceChange: newGame.result === "win" ? +50 : -35,
+                date: new Date()
+            };
+
+            await createHistory(history);
+
+            // update balance of user
+            const user = await User.findById(userId);
+            if (user) {
+                user.balance = newBalance;
+                await user.save();
+            }
+
+        }
+
+
         res.status(201).json({
             code: "GameCreated",
             message: "Game created successfully",
@@ -33,12 +59,15 @@ const gamePlay = async (req: Request, res: Response): Promise<void> => {
         logger.info('Game created successfully', { newGame });
 
     } catch (error) {
-        res.status(500).json({
-            code: "ServerError",
-            message: "Internal Server Error",
-            error: error
-        });
-        logger.error('Error while fetching users', error);
+        if (!res.headersSent) {
+            res.status(500).json({
+                code: "ServerError",
+                message: "Internal Server Error",
+                error: error
+            });
+        }
+        logger.error('Error while creating game', error);
     }
-}
+};
+
 export default gamePlay;
