@@ -32,8 +32,8 @@ const register = async (req: Request, res: Response): Promise<void> => {
         });
 
         // generate a JWT token for the user
-        const accessToken = generateAccessToken(newUser._id);
-        const refreshToken = generateRefreshToken(newUser._id);
+        const accessToken = generateAccessToken(newUser._id, newUser.role);
+        const refreshToken = generateRefreshToken(newUser._id, newUser.role);
 
         // store the refresh token in the database
         await Token.create({

@@ -19,8 +19,8 @@ const refreshToken = async (req: Request, res: Response) => {
         }
 
         // Verify refresh tokens
-        const jwtPayload = verifyRefreshToken(refreshToken) as { userId: Types.ObjectId };
-        const accessToken = generateAccessToken(jwtPayload.userId);
+        const jwtPayload = verifyRefreshToken(refreshToken) as { userId: Types.ObjectId, role: 'admin' | 'user' };
+        const accessToken = generateAccessToken(jwtPayload.userId, jwtPayload.role);
 
         res.status(200).json({ accessToken });
 

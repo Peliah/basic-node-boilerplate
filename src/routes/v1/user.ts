@@ -13,6 +13,7 @@ import getUser from "@/controllers/v1/user/get_user_by_id";
 import updateUser from "@/controllers/v1/user/update_user_by_id";
 import deleteUser from "@/controllers/v1/user/delete_user_by_id";
 import swagger from "@/config/swagger";
+import { createUser } from "@/controllers/v1/user/create_user";
 const router = Router();
 
 /** 
@@ -311,5 +312,68 @@ router.delete('/:id',
     validationError,
     deleteUser,
 );
+
+/**
+ * @openapi
+ * /api/v1/users:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email: 
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               first_name:
+ *                 type: string
+ *               last_name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               profilePicture:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successfully created user
+ */
+router.post('/',
+    authenticate,
+    authorize(['admin']),
+    body('username').isString().isLength({ max: 20 }).withMessage('Username must be a string and less than 20 characters').custom(async (value) => {
+        const userExists = await User.findOne({ username: value });
+        if (userExists) {
+            throw new Error('Username is already in use');
+        }
+    }),
+    body('email').isEmail().withMessage('Email must be a valid email address').custom(async (value) => {
+        const userExists = await User.findOne({ email: value });
+        if (userExists) {
+            throw new Error('Email already exists');
+        }
+    }),
+    body('role').isIn(['user', 'admin']).withMessage('Role must be either user or admin'),
+    body('phone').isString().withMessage('Phone number must be a string').isLength({ min: 9, max: 9 }).custom(async (value) => {
+        const userExists = await User.findOne({ phone: value });
+        if (userExists) {
+            throw new Error('Phone number already in use');
+        }
+    }),
+    body('password').isString().isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+    body(['first_name', 'last_name']).isString().withMessage('Name must be  less than 50 characters').isLength({ max: 50 }),
+    validationError,
+    createUser
+)
 
 export default router;
