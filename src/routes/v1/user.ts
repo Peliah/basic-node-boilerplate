@@ -280,7 +280,6 @@ router.put('/:id',
     body('password').optional().isString().isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
     body('role').optional().isIn(['user', 'admin']).withMessage('Role must be either user or admin'),
     body(['first_name', 'last_name']).optional().isString().withMessage('Name must be  less than 50 characters').isLength({ max: 50 }),
-    body(['twitter', 'facebook', 'linkedin', 'instagram', 'youtube', 'github', 'website']).optional().isURL().withMessage('Social links must be valid URLs'),
     validationError,
     updateUser,
 );
@@ -371,7 +370,7 @@ router.post('/',
         }
     }),
     body('password').isString().isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
-    body(['first_name', 'last_name']).isString().withMessage('Name must be  less than 50 characters').isLength({ max: 50 }),
+    body(['first_name', 'last_name']).isString().isLength({ max: 50 }).withMessage('Name must be  less than 50 characters').optional(),
     validationError,
     createUser
 )
