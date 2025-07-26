@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
-import Game from '@/models/game';
+import Game, { GameStatus } from '@/models/game';
 import User from '@/models/user';
 import { logger } from '@/lib/winston';
 
-enum EventType {
+export enum EventType {
   GAME_CREATED = 'gameCreated',
   GAME_STARTED = 'gameStarted',
   GAME_FINISHED = 'gameFinished',
+  JOIN_GAME = 'joinGameRoom',
+  PLAYER_FORFEIT = 'playerForfeit',
 }
 
 const createGame = async (req: Request, res: Response) => {
@@ -52,7 +54,7 @@ const joinGame = async (req: Request, res: Response) => {
     await user.save();
 
     game.joiner = userId;
-    game.status = 'active';
+    game.status = GameStatus.ACTIVE;
     game.turn = 1;
     await game.save();
 
@@ -84,7 +86,7 @@ const playTurn = async (req: Request, res: Response) => {
       return res.json({ generatedNumber, game });
     } else {
       game.joinerNumber = generatedNumber;
-      game.status = 'finished';
+      game.status = GameStatus.FINISHED;
 
       // Determine winner
       let winner = null;
@@ -133,11 +135,57 @@ const getGameHistory = async (req: Request, res: Response) => {
 };
 
 const getAllGames = async (req: Request, res: Response) => {
-  const games = await Game.find()
-    .populate('creator', 'username')
-    .populate('joiner', 'username')
-    .sort({ createdAt: -1 });
-  res.json(games);
+  try {
+    // Optional status filter from query
+    const { status } = req.query;
+    const filter: any = {};
+    if (status && ['pending', 'active', 'finished'].includes(String(status))) {
+      filter.status = status;
+    }
+
+    const games = await Game.find(filter)
+      .populate('creator', 'username')
+      .populate('joiner', 'username')
+      .sort({ createdAt: -1 });
+
+    res.json(games);
+  } catch (error) {
+    logger.error('Error during getAllGames', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 };
 
-export { createGame, getAllGames, joinGame, playTurn, getGameHistory };
+const forfeitGame = async (socket: any, gameId: string, io: any) => {
+  try {
+    // Optionally, you may want to check socket.user for auth (see note below)
+    const game = await Game.findById(gameId);
+    if (!game || game.status !== 'active') return;
+
+    // Who is forfeiting?
+    const userId = socket.user?._id;
+
+    // Determine the winner: the OTHER player wins
+    let winner = null;
+    if (String(game.creator) === String(userId)) {
+      winner = game.joiner;
+    } else if (String(game.joiner) === String(userId)) {
+      winner = game.creator;
+    } else {
+      // If user is not in game, ignore
+      return;
+    }
+
+    // Settle the game
+    game.status = GameStatus.FINISHED;
+    game.winner = winner;
+    await game.save();
+
+    // Award bet to winner emit game finished event
+    await User.updateOne({ _id: winner }, { $inc: { balance: game.bet * 2 } });
+    io.to(gameId).emit(EventType.GAME_FINISHED, { game, forfeit: userId });
+  } catch (err) {
+    console.error('Forfeit error:', err);
+  }
+}
+
+export { createGame, getAllGames, joinGame, playTurn, getGameHistory, forfeitGame };

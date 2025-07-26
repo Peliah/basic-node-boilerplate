@@ -13,6 +13,7 @@ import { logger } from '@/lib/winston';
 import swagger from './config/swagger';
 import swaggerUI from 'swagger-ui-express';
 import { authenticateSocket } from '@/middleware/authenticate';
+import { EventType, forfeitGame } from '@/controllers/v2/game/game_multiplayer';
 const socketio = require('socket.io');
 
 const app = express();
@@ -70,10 +71,15 @@ io.use(authenticateSocket);
 io.on('connection', (socket: any) => {
   logger.info(`New client connected: ${socket.id}`);
 
-  socket.on('joinGameRoom', (data: any) => {
+  socket.on(EventType.JOIN_GAME, (data: any) => {
     const { gameId } = data;
     logger.info(`Client ${socket.id} joining game room: ${gameId}`);
     socket.join(gameId);
+  });
+
+  socket.on(EventType.PLAYER_FORFEIT, async (data: any) => {
+    const { gameId } = data;
+    await forfeitGame(socket, gameId, io)
   });
 
   socket.on('disconnect', () => {

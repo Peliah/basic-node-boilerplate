@@ -35,13 +35,18 @@ import { Schema, model, Types, Document } from 'mongoose';
 //
 // export default model<IGame>('Game', gameSchema);
 
+export enum GameStatus {
+    PENDING = 'pending',
+    ACTIVE = 'active',
+    FINISHED = 'finished'
+}
 
 export interface IGame extends Document {
     creator: Types.ObjectId;      // player 1
     joiner?: Types.ObjectId | null; // player 2
     bet: number;
     timeout: number;               // seconds (duration to wait for join)
-    status: 'pending' | 'active' | 'finished';
+    status: GameStatus;
     turn: 1 | 2;
     creatorNumber?: number;
     joinerNumber?: number;
@@ -54,7 +59,7 @@ const gameSchema = new Schema<IGame>({
     joiner: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     bet: { type: Number, required: true },
     timeout: { type: Number, required: true },
-    status: { type: String, enum: ['pending', 'active', 'finished'], default: 'pending' },
+    status: { type: String, enum: GameStatus, default: GameStatus.PENDING },
     turn: { type: Number, enum: [1, 2], default: 1 },
     creatorNumber: { type: Number },
     joinerNumber: { type: Number },

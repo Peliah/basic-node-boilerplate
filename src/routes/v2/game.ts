@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { body, param } from "express-validator";
+import { body, param, query } from 'express-validator';
 import authenticate from "@/middleware/authenticate";
 import authorize from "@/middleware/authorize";
 import validationError from "@/middleware/validationError";
@@ -54,6 +54,12 @@ router.post(
  *     tags: [Game]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, active, finished]
  *     responses:
  *       200:
  *         description: Liste des parties
@@ -61,7 +67,8 @@ router.post(
 router.get(
   '/',
   authenticate,
-  authorize(['user', 'admin']),
+  authorize(['user']),
+  query('status').optional().isIn(['pending', 'active', 'finished']),
   validationError,
   gameController.getAllGames,
 );
