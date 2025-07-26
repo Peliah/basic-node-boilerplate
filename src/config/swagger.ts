@@ -5,7 +5,7 @@ const options = {
         openapi: '3.0.0',
         info: {
             title: 'True Number API',
-            version: "1.0.0",
+            version: "2.0.0",
             description: 'API documentation for True Number',
         },
         components: {
@@ -18,7 +18,7 @@ const options = {
             },
         },
     },
-    apis: ['src/routes/v1/*.ts'],
+    apis: ['src/routes/v1/*.ts', 'src/routes/v2/*.ts'],
 };
 
 export default swaggerJsDoc(options);

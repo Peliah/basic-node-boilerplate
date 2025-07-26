@@ -6,13 +6,18 @@ import compression from 'compression';
 import helmet from 'helmet';
 import limiter from '@/lib/express_rate_limit';
 import v1routes from '@/routes/v1/index';
+import v2routes from '@/routes/v2/index';
+import http from 'http';
 import { connectToDatabase, disconnectFromDatabase } from './lib/mongoose';
 import { logger } from '@/lib/winston';
 import swagger from './config/swagger';
 import swaggerUI from 'swagger-ui-express';
-
+import { authenticateSocket } from '@/middleware/authenticate';
+const socketio = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketio(server, { cors: { origin: '*' } });
 
 // Middleware setup
 const corsOptions: CorsOptions = {
@@ -41,11 +46,12 @@ app.use(helmet({
 }));
 app.use(limiter);
 
-
+// Connect to database
 (async () => {
   try {
     await connectToDatabase();
     app.use('/api/v1', v1routes);
+    app.use('/api/v2', v2routes);
     app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swagger));
 
     app.listen(config.PORT, () => {
@@ -53,11 +59,27 @@ app.use(limiter);
     });
   } catch (error) {
     logger.error('Error during application initialization:', error);
-    if (config.NODE_ENV === 'produciton') {
+    if (config.NODE_ENV === 'production') {
       process.exit(1);
     }
   }
 })();
+
+// Websocket server setup
+io.use(authenticateSocket);
+io.on('connection', (socket: any) => {
+  logger.info(`New client connected: ${socket.id}`);
+
+  socket.on('joinGameRoom', (data: any) => {
+    const { gameId } = data;
+    logger.info(`Client ${socket.id} joining game room: ${gameId}`);
+    socket.join(gameId);
+  });
+
+  socket.on('disconnect', () => {
+    logger.info("Client disconnected", socket.id);
+  });
+});
 
 const handleShutdown = async () => {
   try {
@@ -71,3 +93,5 @@ const handleShutdown = async () => {
 
 process.on('SIGTERM', handleShutdown);
 process.on('SIGINT', handleShutdown);
+
+export { io };

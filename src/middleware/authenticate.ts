@@ -1,7 +1,7 @@
 import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
-import { generateAccessToken, verifyAccessToken, verifyRefreshToken } from "@/lib/jwt";
+import { verifyAccessToken } from "@/lib/jwt";
 import { logger } from "@/lib/winston";
-import Token from '@/models/token';
+import User from '@/models/user';
 import type { Request, Response, NextFunction } from "express";
 import type { Types } from "mongoose";
 
@@ -17,7 +17,6 @@ import type { Types } from "mongoose";
  * 
  * @returns {void}
  */
-
 const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization
     console.log(authHeader);
@@ -56,6 +55,20 @@ const authenticate = async (req: Request, res: Response, next: NextFunction): Pr
             error: error
         })
         logger.error('Error during authentication ', error)
+    }
+}
+
+export async function authenticateSocket(socket: any, next: NextFunction) {
+    const token = socket.handshake.auth?.token;
+    if (!token) return next(new Error('No token'));
+    try {
+        const jwtPayload = verifyAccessToken(token) as { userId: Types.ObjectId };
+        socket.user = await User.findById(jwtPayload.userId);
+        if (!socket.user) throw new Error('User not found');
+        next();
+    } catch (error) {
+        logger.error('Error during authentication ', error)
+        next(error);
     }
 }
 

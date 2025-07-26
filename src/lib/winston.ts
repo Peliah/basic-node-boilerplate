@@ -6,7 +6,7 @@ const { combine, timestamp, json, errors, colorize, align, printf } = winston.fo
 
 const transports: winston.transport[] = [];
 
-if (config.NODE_ENV !== 'produciton') {
+if (config.NODE_ENV !== 'production') {
     transports.push(
         new winston.transports.Console({
             format: combine(

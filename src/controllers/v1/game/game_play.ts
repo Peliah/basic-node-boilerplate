@@ -1,10 +1,17 @@
 import { Request, Response } from "express";
 import { logger } from "@/lib/winston";
 import Game from "@/models/game";
-import type { IGame } from "@/models/game";
 import User from "@/models/user";
 import createHistory from "../history/create_history";
 import type { IHistory } from "@/models/history";
+import { Types } from 'mongoose';
+
+interface IGame {
+    userId: Types.ObjectId;
+    generatedNumber: number;
+    newBalance: number;
+    result: 'win' | 'lose';
+}
 
 type GameData = Pick<IGame, 'generatedNumber' | 'newBalance' | 'result'>;
 /**
@@ -31,10 +38,11 @@ const gamePlay = async (req: Request, res: Response): Promise<void> => {
         if (newGame && userId) {
             const history: IHistory = {
                 userId,
-                gameId: newGame._id,
+                gameId: newGame._id as Types.ObjectId,
                 generatedNumber,
                 result,
                 newBalance,
+                // @ts-ignore   // ignore absence of result field in newGame object
                 balanceChange: newGame.result === "win" ? +50 : -35,
                 date: new Date()
             };
