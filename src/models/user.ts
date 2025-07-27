@@ -48,7 +48,7 @@ const userSchema = new Schema<IUser>({
     bio: { type: String, default: '' },
     balance: {
         type: Number,
-        default: 0,
+        default: 100,
     },
 }, {
     timestamps: true,

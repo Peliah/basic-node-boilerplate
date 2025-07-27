@@ -55,7 +55,7 @@ app.use(limiter);
     app.use('/api/v2', v2routes);
     app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swagger));
 
-    app.listen(config.PORT, () => {
+    server.listen(config.PORT, () => {
       logger.info(`Server running on http://localhost:${config.PORT}`);
     });
   } catch (error) {
