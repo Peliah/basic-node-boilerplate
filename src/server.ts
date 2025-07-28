@@ -77,10 +77,10 @@ io.on('connection', (socket: any) => {
     socket.join(gameId);
   });
 
-  socket.on(EventType.PLAYER_FORFEIT, async (data: any) => {
-    const { gameId } = data;
-    await forfeitGame(socket, gameId, io)
-  });
+  // socket.on(EventType.PLAYER_FORFEIT, async (data: any) => {
+  //   const { gameId } = data;
+  //   await forfeitGame()
+  // });
 
   socket.on('disconnect', () => {
     logger.info("Client disconnected", socket.id);

@@ -154,4 +154,64 @@ router.get(
   gameController.getGameHistory
 );
 
+/**
+ * @openapi
+ * /api/v2/games/{id}/forfeit:
+ *   post:
+ *     summary: Abandonner une partie
+ *     tags: [Game]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Partie abandonnée
+ *       400:
+ *         description: Partie non disponible
+ */
+router.post(
+  '/:id/forfeit',
+  authenticate,
+  authorize(['user']),
+  param('id').isMongoId(),
+  validationError,
+  attachSocket,
+  gameController.forfeitGame
+)
+
+// getGameById
+/**
+ * @openapi
+ * /api/v2/games/{id}:
+ *   get:
+ *     summary: Obtenir une partie par ID
+ *     tags: [Game]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Partie trouvée
+ *       404:
+ *         description: Partie non trouvée
+ */
+router.get(
+  '/:id',
+  authenticate,
+  authorize(['user']),
+  param('id').isMongoId(),
+  validationError,
+  gameController.getGameById
+);
+
 export default router;

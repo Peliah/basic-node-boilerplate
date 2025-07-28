@@ -212,7 +212,7 @@ router.get('/',
  */
 router.get('/:id',
     authenticate,
-    authorize(['admin']),
+    authorize(['admin', 'user']),
     param('id').notEmpty().isMongoId().withMessage('Invalid user ID format'),
     validationError,
     getUser,

@@ -9,6 +9,7 @@ export enum EventType {
   GAME_FINISHED = 'gameFinished',
   JOIN_GAME = 'joinGameRoom',
   PLAYER_FORFEIT = 'playerForfeit',
+  PLAYER_MOVE = 'playerMove',
 }
 
 const createGame = async (req: Request, res: Response) => {
@@ -18,7 +19,8 @@ const createGame = async (req: Request, res: Response) => {
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.balance < bet) return res.status(400).json({ error: 'Insufficient balance' });
+    if (user.balance < bet)
+      throw new Error('Insufficient balance'); // res.status(400).json({ error: 'Insufficient balance' });
 
     user.balance -= bet; // Block bet
     await user.save();
@@ -33,6 +35,7 @@ const createGame = async (req: Request, res: Response) => {
     // Emit socket event for game creation
     req.io?.emit(EventType.GAME_CREATED, game);
     res.status(201).json(game);
+    logger.info(`Game created: ${game.id}`);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -83,6 +86,7 @@ const playTurn = async (req: Request, res: Response) => {
       game.creatorNumber = generatedNumber;
       game.turn = 2;
       await game.save();
+      req.io?.to(game.id).emit(EventType.PLAYER_MOVE, game);
       return res.json({ generatedNumber, game });
     } else {
       game.joinerNumber = generatedNumber;
@@ -155,24 +159,66 @@ const getAllGames = async (req: Request, res: Response) => {
   }
 };
 
-const forfeitGame = async (socket: any, gameId: string, io: any) => {
-  try {
-    // Optionally, you may want to check socket.user for auth (see note below)
-    const game = await Game.findById(gameId);
-    if (!game || game.status !== 'active') return;
+// const forfeitGame = async (socket: any, gameId: string, io: any) => {
+//   try {
+//     // Optionally, you may want to check socket.user for auth (see note below)
+//     const game = await Game.findById(gameId);
+//     if (!game || game.status !== 'active') return;
 
-    // Who is forfeiting?
-    const userId = socket.user?._id;
+//     // Who is forfeiting?
+//     const userId = socket.user?._id;
+
+//     // Determine the winner: the OTHER player wins
+//     let winner = null;
+//     if (String(game.creator) === String(userId)) {
+//       winner = game.joiner;
+//     } else if (String(game.joiner) === String(userId)) {
+//       winner = game.creator;
+//     } else {
+//       // If user is not in game, ignore
+//       return;
+//     }
+
+//     // Settle the game
+//     game.status = GameStatus.FINISHED;
+//     game.winner = winner;
+//     await game.save();
+
+//     // Award bet to winner emit game finished event
+//     await User.updateOne({ _id: winner }, { $inc: { balance: game.bet * 2 } });
+//     io.to(gameId).emit(EventType.GAME_FINISHED, { game, forfeit: userId });
+//   } catch (err) {
+//     console.error('Forfeit error:', err);
+//   }
+// }
+
+const getGameById = async (req: Request, res: Response) => {
+  try {
+    const gameId = req.params.id;
+    const game = await Game.findById(gameId).populate('creator', 'username').populate('joiner', 'username');
+    if (!game) return res.status(404).json({ error: 'Game not found' });
+    res.json(game);
+  } catch (error) {
+    logger.error('Error during getGameById', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+
+const forfeitGame = async (req: Request, res: Response) => {
+  try {
+    const gameId = req.params.id;
+    const game = await Game.findById(gameId);
+    if (!game || game.status !== GameStatus.ACTIVE) return res.status(400).json({ error: 'Game not active' });
 
     // Determine the winner: the OTHER player wins
     let winner = null;
-    if (String(game.creator) === String(userId)) {
+    if (String(game.creator) === String(req.userId)) {
       winner = game.joiner;
-    } else if (String(game.joiner) === String(userId)) {
+    } else if (String(game.joiner) === String(req.userId)) {
       winner = game.creator;
     } else {
       // If user is not in game, ignore
-      return;
+      return res.status(400).json({ error: 'User not in game' });
     }
 
     // Settle the game
@@ -180,12 +226,15 @@ const forfeitGame = async (socket: any, gameId: string, io: any) => {
     game.winner = winner;
     await game.save();
 
-    // Award bet to winner emit game finished event
+    // Award bet to winner
     await User.updateOne({ _id: winner }, { $inc: { balance: game.bet * 2 } });
-    io.to(gameId).emit(EventType.GAME_FINISHED, { game, forfeit: userId });
-  } catch (err) {
-    console.error('Forfeit error:', err);
+    req.io?.to(game.id).emit(EventType.GAME_FINISHED, game);
+
+    res.json(game);
+  } catch (error) {
+    logger.error('Error during forfeitGame', error);
+    res.status(500).json({ error: 'Server error' });
   }
 }
 
-export { createGame, getAllGames, joinGame, playTurn, getGameHistory, forfeitGame };
+export { createGame, getAllGames, joinGame, playTurn, getGameHistory, forfeitGame, getGameById };
